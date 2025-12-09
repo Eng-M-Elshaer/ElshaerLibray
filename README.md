@@ -48,11 +48,12 @@ self.showConfirmationPopup(
 
 ## Key Features
 - **Language & RTL**: `LanguageManager` stores language, swizzles `Bundle`, `UIApplication`, `UILabel`, `UITextField`, `UITextView` so direction/alignment auto-adjust.
--, **Secure storage**: `UserDefaultsManager` simple API for token/FCM token (Keychain) plus flags like login state, counters, notifications. `EncryptionManager` (AES.GCM) for non-sensitive values in UserDefaults.
+- **Secure storage**: `UserDefaultsManager` simple API for token/FCM token (Keychain) plus flags like login state, counters, notifications. `EncryptionManager` (AES.GCM) for non-sensitive values in UserDefaults.
 - **Validators**: email, Egyptian phone, strong password, username, InstaPay links, URL checks.
 - **UI components**: @IBDesignable buttons/text fields/views with gradients, underline, stroke, corner radius, shadow; self-sized collection/table/text views with placeholder; gradient stack view; badges; round corners; animations; built-in activity indicator helper.
 - **Image loading**: `UIImageView.loadImage` and `loadImageProfile` using Kingfisher with HTTPS auto-upgrade and error logging.
 - **Networking**: Generic `NetworkManager` with `APIRouter` protocol, `DataModel<T, A>` response wrapper, automatic token injection, debug logging, and connectivity checks.
+- **Base Classes**: `BaseViewController` with navigation helpers, popup methods, loading indicators, and UI utilities. `BaseViewModel` with validation and string utilities.
 - **Files**: `PDFVC` for viewing/sharing PDFs, `TextVC` to display text/HTML in a scroll view.
 - **Maps**: `openMapsWith` offers Apple Maps or Google Maps when available.
 - **Helpers**: `Double.formattedCurrency/rounded/degreesToRadians` and `String` date/time/html/number formatting.
@@ -82,6 +83,249 @@ ToatsVC.show(
     buttonTitle: "Settings",
     onButtonTap: { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
 )
+```
+
+## Base Classes
+
+The library provides `BaseViewController` and `BaseViewModel` classes that you can inherit from to get common functionality.
+
+### BaseViewController
+
+A base view controller with navigation helpers, popup methods, loading indicators, and UI utilities.
+
+#### Features
+- Automatic navigation bar hiding/showing
+- Popup helpers (error, success, info, checker)
+- Loading indicator management
+- Center image with label
+- View type showing/hiding (table/scroll)
+- Navigation helpers
+
+#### Example Usage
+```swift
+import ElshaerLibrary
+
+class MyViewController: BaseViewController {
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Show loading
+        showMainLoader()
+        
+        // Load data
+        loadData()
+    }
+    
+    func loadData() {
+        // Your data loading logic
+        NetworkManager.shared.request(MyAPIRouter.getData) { [weak self] result in
+            self?.hideMainLoader()
+            
+            switch result {
+            case .success(let response):
+                self?.showSuccessPopup(
+                    title: "Success",
+                    message: "Data loaded successfully"
+                )
+            case .failure(let error):
+                self?.showErrorPopup(
+                    title: "Error",
+                    message: error.localizedDescription
+                )
+            }
+        }
+    }
+    
+    func showEmptyState() {
+        setCenterImage(
+            named: "empty_state",
+            labelText: "No data available"
+        )
+    }
+    
+    func hideEmptyState() {
+        removeCenterImage()
+    }
+    
+    @IBAction func logoutTapped() {
+        showConfirmationPopup(
+            title: "Logout?",
+            message: "Are you sure you want to logout?",
+            confirmTitle: "Logout",
+            cancelTitle: "Cancel",
+            style: .destructive,
+            onConfirm: { [weak self] in
+                self?.logOutAction {
+                    // Navigate to login
+                }
+            }
+        )
+    }
+}
+```
+
+#### Available Methods
+
+**Popup Methods:**
+```swift
+// Error popup
+showErrorPopup(title: "Error", message: "Something went wrong")
+
+// Success popup with completion
+showSuccessPopup(
+    title: "Success",
+    message: "Operation completed",
+    completion: { /* handle completion */ }
+)
+
+// Custom style popup
+showPopup(
+    style: .warning,
+    title: "Warning",
+    message: "Please check your input"
+)
+
+// Checker popup
+showChecker(
+    image: UIImage(systemName: "checkmark.circle.fill"),
+    title: "Done",
+    message: "Operation completed successfully",
+    buttonTitle: "OK"
+)
+
+// Unauthenticated popup
+showUnauthenticatedPopup(onLogin: {
+    // Navigate to login
+})
+
+// Update alert
+showUpdateAlert(appStoreURL: "https://apps.apple.com/app/id123456")
+
+// Info sheet with HTML
+showInfoSheet(htmlString: "<h1>About Us</h1><p>Content...</p>")
+```
+
+**Navigation Methods:**
+```swift
+// Go back
+goToBackScreen()
+
+// Logout (override to customize)
+override func logOutAction(completion: (() -> Void)?) {
+    // Custom logout logic
+    UserDefaultsManager.shared.isLoggedIn = false
+    UserDefaultsManager.shared.token = nil
+    completion?()
+}
+```
+
+**UI Helper Methods:**
+```swift
+// Show/hide loader
+showMainLoader()
+hideMainLoader()
+
+// Show/hide views
+showView(for: .table)  // Shows table view
+showView(for: .scroll) // Shows scroll view
+
+// Center image
+setCenterImage(named: "empty_state", labelText: "No data")
+removeCenterImage()
+
+// Handle hint label
+handleHint(
+    for: errorLabel,
+    stackView: inputStackView,
+    show: hasError,
+    errorColor: .systemRed,
+    normalColor: .systemBlue
+)
+```
+
+### BaseViewModel
+
+A base view model with validation and utility methods.
+
+#### Features
+- Validation helpers
+- String utilities (name extraction, splitting)
+- Array utilities
+- Optional utilities
+
+#### Example Usage
+```swift
+import ElshaerLibrary
+
+class MyViewModel: BaseViewModel {
+    
+    func validateForm(name: String, email: String, phone: String) -> Bool {
+        let nameValid = !name.isEmpty
+        let emailValid = Validator.shared.isValidEmail(email)
+        let phoneValid = Validator.shared.isValidEgyptianPhoneNumber(phone)
+        
+        return isValid(isValidArray: [nameValid, emailValid, phoneValid])
+        // Or: return validate(nameValid, emailValid, phoneValid)
+    }
+    
+    func processFullName(_ fullName: String) {
+        let (firstName, lastName) = extractFirstAndLastName(from: fullName)
+        print("First: \(firstName), Last: \(lastName)")
+    }
+    
+    func checkData(_ data: [String]?) {
+        if let data = data, isNotEmpty(data) {
+            // Process data
+        }
+    }
+}
+```
+
+#### Available Methods
+
+**Validation:**
+```swift
+// Check all validations
+let isValid = isValid(isValidArray: [true, true, false]) // false
+
+// Validate multiple conditions
+let isValid = validate(true, true, false) // false
+```
+
+**String Utilities:**
+```swift
+// Extract first and last name
+let (firstName, lastName) = extractFirstAndLastName(from: "John Doe Smith")
+// firstName: "John", lastName: "Doe Smith"
+
+// Split string
+let components = splitString("one two three", separator: " ")
+// ["one", "two", "three"]
+```
+
+**Array Utilities:**
+```swift
+// Check if array is not empty
+if isNotEmpty(items) {
+    // Process items
+}
+
+// Check if array is empty
+if isEmpty(items) {
+    // Show empty state
+}
+```
+
+**Optional Utilities:**
+```swift
+// Unwrap with default
+let value = unwrapOrDefault(optionalValue, defaultValue: "default")
+
+// Check if not nil
+if isNotNil(optionalValue) {
+    // Use value
+}
 ```
 
 ## Network Layer
