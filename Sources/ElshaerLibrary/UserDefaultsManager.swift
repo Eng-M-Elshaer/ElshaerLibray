@@ -39,9 +39,10 @@ public final class EncryptionManager {
 
 // MARK: - KeychainManager for storing sensitive information like tokens
 public final class KeychainManager {
-    private static var serviceName: String = Bundle.main.bundleIdentifier ?? "default.keychain.service"
+    // Note: These properties are marked as nonisolated(unsafe) because access is synchronized via keychainQueue
+    private nonisolated(unsafe) static var serviceName: String = Bundle.main.bundleIdentifier ?? "default.keychain.service"
     private static let keychainQueue = DispatchQueue(label: "com.elshaerlibrary.keychain", qos: .utility)
-    private static var _keychain: Keychain = Keychain(service: serviceName)
+    private nonisolated(unsafe) static var _keychain: Keychain = Keychain(service: serviceName)
     
     private static var keychain: Keychain {
         return keychainQueue.sync {

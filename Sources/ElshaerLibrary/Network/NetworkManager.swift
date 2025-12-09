@@ -54,7 +54,8 @@ public final class NetworkManager {
     // MARK: - Nonisolated Accessors for Network Layer
     /// Thread-safe storage for baseURL (accessed from nonisolated context)
     private static let baseURLQueue = DispatchQueue(label: "com.elshaerlibrary.network.baseURL")
-    private static var _baseURL: String?
+    // Note: This property is marked as nonisolated(unsafe) because access is synchronized via baseURLQueue
+    private nonisolated(unsafe) static var _baseURL: String?
     
     /// Nonisolated accessor for baseURL (for use in APIRouter)
     nonisolated public static func getBaseURL() -> String? {
