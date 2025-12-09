@@ -25,7 +25,7 @@ public final class TextFieldPopUpVC: UIViewController {
     private let textField = UITextField()
     private let hintLabel = UILabel()
     private let buttonsStackView = UIStackView()
-    private let cancelButton = UIButton(type: .system)
+    private let cancelButton = CustomButton(type: .system)
     private let confirmButton = CustomButton(type: .system)
     
     // MARK: - Configuration
