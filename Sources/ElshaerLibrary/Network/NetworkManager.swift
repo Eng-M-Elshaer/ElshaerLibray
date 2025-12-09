@@ -51,10 +51,33 @@ public final class NetworkManager {
     
     private init() {}
     
+    // MARK: - Nonisolated Accessors for Network Layer
+    /// Thread-safe storage for baseURL (accessed from nonisolated context)
+    private static let baseURLQueue = DispatchQueue(label: "com.elshaerlibrary.network.baseURL")
+    private static var _baseURL: String?
+    
+    /// Nonisolated accessor for baseURL (for use in APIRouter)
+    nonisolated public static func getBaseURL() -> String? {
+        return baseURLQueue.sync {
+            return _baseURL
+        }
+    }
+    
+    /// Set baseURL in thread-safe manner
+    nonisolated public static func setBaseURL(_ url: String?) {
+        baseURLQueue.sync {
+            _baseURL = url
+        }
+        Task { @MainActor in
+            shared.baseURL = url
+        }
+    }
+    
     // MARK: - Configuration
     /// Configure the network manager with base URL
     public func configure(baseURL: String, debugEnabled: Bool = false, debugBaseURL: String? = nil) {
         self.baseURL = baseURL
+        Self.setBaseURL(baseURL) // Also set in thread-safe storage
         self.isDebugEnabled = debugEnabled
         self.debugBaseURL = debugBaseURL
     }

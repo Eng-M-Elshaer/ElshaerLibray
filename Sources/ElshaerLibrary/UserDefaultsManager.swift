@@ -38,55 +38,75 @@ public final class EncryptionManager {
 }
 
 // MARK: - KeychainManager for storing sensitive information like tokens
-@MainActor
 public final class KeychainManager {
     private static var serviceName: String = Bundle.main.bundleIdentifier ?? "default.keychain.service"
-    private static var keychain: Keychain = Keychain(service: serviceName)
+    private static let keychainQueue = DispatchQueue(label: "com.elshaerlibrary.keychain", qos: .utility)
+    private static var _keychain: Keychain = Keychain(service: serviceName)
+    
+    private static var keychain: Keychain {
+        return keychainQueue.sync {
+            return _keychain
+        }
+    }
 
     /// Configure the Keychain service name once at app start (e.g., in AppDelegate/SceneDelegate).
     /// - Parameter service: A unique service string, typically your bundle identifier.
     public static func configure(service: String) {
-        serviceName = service
-        keychain = Keychain(service: service)
-    }
-    
-    public static func saveToken(token: String) {
-        do {
-            try keychain.set(token, key: "token")
-        } catch let error {
-            print("Error saving token: \(error)")
+        keychainQueue.sync {
+            serviceName = service
+            _keychain = Keychain(service: service)
         }
     }
     
-    public static func getToken() -> String? {
-        return try? keychain.get("token")
+    public static func saveToken(token: String) {
+        keychainQueue.async {
+            do {
+                try self._keychain.set(token, key: "token")
+            } catch let error {
+                print("Error saving token: \(error)")
+            }
+        }
+    }
+    
+    nonisolated public static func getToken() -> String? {
+        return keychainQueue.sync {
+            return try? _keychain.get("token")
+        }
     }
     
     public static func deleteToken() {
-        do {
-            try keychain.remove("token")
-        } catch let error {
-            print("Error deleting token: \(error)")
+        keychainQueue.async {
+            do {
+                try self._keychain.remove("token")
+            } catch let error {
+                print("Error deleting token: \(error)")
+            }
         }
     }
     
     public static func saveFCMToken(fcmToken: String) {
-        do {
-            try keychain.set(fcmToken, key: "fcmToken")
-        } catch let error {
-            print("Error saving FCM token: \(error)")
+        keychainQueue.async {
+            do {
+                try self._keychain.set(fcmToken, key: "fcmToken")
+            } catch let error {
+                print("Error saving FCM token: \(error)")
+            }
         }
     }
     
-    public static func getFCMToken() -> String? {
-        return try? keychain.get("fcmToken")
+    nonisolated public static func getFCMToken() -> String? {
+        return keychainQueue.sync {
+            return try? _keychain.get("fcmToken")
+        }
     }
     
     public static func deleteFCMToken() {
-        do {
-            try keychain.remove("fcmToken")
-        } catch let error {
-            print("Error deleting FCM token: \(error)")
+        keychainQueue.async {
+            do {
+                try self._keychain.remove("fcmToken")
+            } catch let error {
+                print("Error deleting FCM token: \(error)")
+            }
         }
     }
 }

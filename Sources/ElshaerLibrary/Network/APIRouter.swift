@@ -36,10 +36,11 @@ public extension APIRouter {
 // MARK: - APIRouter Default Implementation
 public extension APIRouter {
     /// Default implementation that builds the URLRequest
-    func asURLRequest() throws -> URLRequest {
+    /// This method is nonisolated to allow access from network contexts
+    nonisolated func asURLRequest() throws -> URLRequest {
         // Base URL should be configured in your project
-        // You can use NetworkManager.baseURL or configure it per router
-        guard let baseURL = NetworkManager.shared.baseURL else {
+        // Use thread-safe accessor
+        guard let baseURL = NetworkManager.getBaseURL() else {
             throw NetworkError.invalidBaseURL
         }
         
@@ -55,15 +56,16 @@ public extension APIRouter {
         defaultHeaders[HeaderKeys.clientVersion] = HeaderValues.clientVersion
         defaultHeaders[HeaderKeys.clientType] = HeaderValues.clientType
         
-        // Add language header if LanguageManager is available
+        // Add language header - access UserDefaults directly (thread-safe)
         #if canImport(UIKit)
-        if let language = LanguageManager.shared.getCurrentLanguage().rawValue as String? {
-            defaultHeaders[HeaderKeys.acceptLanguage] = language
+        if let locale = UserDefaults.standard.string(forKey: "Locale"),
+           !locale.isEmpty {
+            defaultHeaders[HeaderKeys.acceptLanguage] = locale
         }
         #endif
         
-        // Add authorization header if token exists
-        if let token = UserDefaultsManager.shared.token, !token.isEmpty {
+        // Add authorization header - access Keychain directly (thread-safe)
+        if let token = KeychainManager.getToken(), !token.isEmpty {
             defaultHeaders[HeaderKeys.authorization] = "Bearer \(token)"
         }
         
