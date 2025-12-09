@@ -40,7 +40,15 @@ public final class EncryptionManager {
 // MARK: - KeychainManager for storing sensitive information like tokens
 @MainActor
 public final class KeychainManager {
-    static let keychain = Keychain(service: "company.bodymasters.app")
+    private static var serviceName: String = Bundle.main.bundleIdentifier ?? "default.keychain.service"
+    private static var keychain: Keychain = Keychain(service: serviceName)
+
+    /// Configure the Keychain service name once at app start (e.g., in AppDelegate/SceneDelegate).
+    /// - Parameter service: A unique service string, typically your bundle identifier.
+    public static func configure(service: String) {
+        serviceName = service
+        keychain = Keychain(service: service)
+    }
     
     public static func saveToken(token: String) {
         do {
