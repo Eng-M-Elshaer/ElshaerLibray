@@ -7,8 +7,8 @@
 
 import Alamofire
 
-class Connectivity {
-    class func isConnectedToInternet() -> Bool {
+public final class Connectivity {
+    public static func isConnectedToInternet() -> Bool {
         return NetworkReachabilityManager()?.isReachable ?? false
     }
 }
