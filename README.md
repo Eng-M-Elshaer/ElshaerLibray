@@ -9,12 +9,12 @@ UIKit-ready utility library for iOS 15+ that bundles common building blocks: lan
 
 ## Installation (Swift Package Manager)
 1) Xcode → `File` → `Add Packages...`  
-2) URL: `https://github.com/ElshaerLibray/ElshaerLibray.git`  
+2) URL: `https://github.com/Eng-M-Elshaer/ElshaerLibray.git`  
 3) Select `ElshaerLibrary` for your target.
 
 Or in `Package.swift`:
 ```swift
-.package(url: "https://github.com/ElshaerLibray/ElshaerLibray.git", from: "1.0.0")
+.package(url: "https://github.com/Eng-M-Elshaer/ElshaerLibray.git", from: "1.0.0")
 ```
 
 ## Quick Start
@@ -34,16 +34,18 @@ let isValidEmail = Validator.shared.isValidEmail("user@example.com")
 // 4) Quick toast
 ToatsVC.show(message: "Saved", type: .success)
 
-// 5) Confirmation popup
-self.showConfirmationPopup(
-    title: "Delete item?",
-    message: "This action cannot be undone",
-    confirmTitle: "Delete",
-    cancelTitle: "Cancel",
-    style: .destructive,
-    onConfirm: { /* delete */ },
-    onCancel: nil
-)
+// 5) Confirmation popup (call after the presenting VC is visible, e.g. in viewDidAppear)
+DispatchQueue.main.async {
+    self.showConfirmationPopup(
+        title: "Delete item?",
+        message: "This action cannot be undone",
+        confirmTitle: "Delete",
+        cancelTitle: "Cancel",
+        style: .destructive,
+        onConfirm: { /* delete */ },
+        onCancel: nil
+    )
+}
 ```
 
 ## Key Features
@@ -86,7 +88,7 @@ ToatsVC.show(
 
 ## Usage Notes
 - All UI classes are wrapped in `#if canImport(UIKit)`; the module targets iOS.
-- Some constants are sample defaults (e.g., `KeychainManager.service = "company.bodymasters.app"` and header values); change to fit your app.
+- Some constants are sample defaults (e.g., `KeychainManager.service = "restart.breakfast.app"` and header values); change to fit your app.
 - `EncryptionManager` generates an in-memory key; if you need persistence, store your own key securely.
 - Most views expose @IBInspectable knobs, so you can style them directly from Interface Builder.
 

@@ -165,54 +165,24 @@ public final class ToatsVC: UIViewController {
     ///   - viewController: Optional presenter; if `nil`, the top-most controller is used.
     ///   - onButtonTap: Called when the action button is tapped.
     ///   - onDismiss: Called after the toast has fully disappeared.
-    public static func show(message: String,
+public static func show(message: String,
                             type: ToastType = .info,
                             duration: TimeInterval = 2.0,
                             buttonTitle: String? = nil,
                             in viewController: UIViewController? = nil,
                             onButtonTap: (() -> Void)? = nil,
                             onDismiss: (() -> Void)? = nil) {
-        
-        guard let presenter = viewController ?? topMostViewController() else { return }
-        
-        let toastVC = ToatsVC(message: message,
-                              type: type,
-                              duration: duration,
-                              buttonTitle: buttonTitle,
-                              buttonAction: onButtonTap,
-                              completion: onDismiss)
-        presenter.present(toastVC, animated: false, completion: nil)
-    }
-    
-    // MARK: - Helpers
-    private static func topMostViewController(from root: UIViewController? = nil) -> UIViewController? {
-        let rootVC: UIViewController?
-        
-        if let root = root {
-            rootVC = root
-        } else {
-            rootVC = UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .flatMap { $0.windows }
-                .first { $0.isKeyWindow }?
-                .rootViewController
+        DispatchQueue.main.async {
+            guard let presenter = viewController ?? UIApplication.topMostViewController() else { return }
+            
+            let toastVC = ToatsVC(message: message,
+                                  type: type,
+                                  duration: duration,
+                                  buttonTitle: buttonTitle,
+                                  buttonAction: onButtonTap,
+                                  completion: onDismiss)
+            presenter.present(toastVC, animated: false, completion: nil)
         }
-        
-        guard let rootVC = rootVC else { return nil }
-        
-        if let presented = rootVC.presentedViewController {
-            return topMostViewController(from: presented)
-        }
-        
-        if let nav = rootVC as? UINavigationController {
-            return nav.visibleViewController
-        }
-        
-        if let tab = rootVC as? UITabBarController {
-            return tab.selectedViewController ?? tab
-        }
-        
-        return rootVC
     }
 }
 #endif

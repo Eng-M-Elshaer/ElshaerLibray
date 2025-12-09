@@ -250,7 +250,7 @@ public extension UIViewController {
                                   onCancel: onCancel)
         vc.modalPresentationStyle = .overFullScreen
         vc.modalTransitionStyle = .crossDissolve
-        present(vc, animated: true)
+        presentSafely(vc, animated: true)
     }
     
     /// Hides the currently presented `TextFieldPopUpVC` if it exists.

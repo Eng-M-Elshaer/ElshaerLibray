@@ -241,7 +241,7 @@ public extension UIViewController {
                              onDismiss: onDismiss)
         vc.modalPresentationStyle = .overFullScreen
         vc.modalTransitionStyle = .crossDissolve
-        present(vc, animated: true)
+        presentSafely(vc, animated: true)
     }
     
     /// Dismisses a presented `InfoPopUpVC` if it exists.

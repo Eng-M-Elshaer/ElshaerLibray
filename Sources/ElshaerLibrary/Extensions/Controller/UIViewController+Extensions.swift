@@ -14,6 +14,59 @@ import MapKit
 
 #if canImport(UIKit)
 @MainActor
+public extension UIApplication {
+    /// Returns the top-most view controller starting from the provided root or the key window.
+    static func topMostViewController(from root: UIViewController? = nil) -> UIViewController? {
+        let rootVC: UIViewController?
+
+        if let root = root {
+            rootVC = root
+        } else {
+            rootVC = UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .flatMap { $0.windows }
+                .first { $0.isKeyWindow }?
+                .rootViewController
+        }
+
+        guard let rootVC = rootVC else { return nil }
+
+        if let presented = rootVC.presentedViewController {
+            return topMostViewController(from: presented)
+        }
+
+        if let nav = rootVC as? UINavigationController {
+            return nav.visibleViewController
+        }
+
+        if let tab = rootVC as? UITabBarController {
+            return tab.selectedViewController ?? tab
+        }
+
+        return rootVC
+    }
+}
+
+@MainActor
+public extension UIViewController {
+    /// Presents a view controller on the main queue, selecting the best presenter even if `self` is not yet in the window hierarchy.
+    func presentSafely(_ viewController: UIViewController,
+                       animated: Bool = true,
+                       completion: (() -> Void)? = nil) {
+        DispatchQueue.main.async { [weak self] in
+            let presenter: UIViewController? = {
+                if let presented = self?.presentedViewController { return presented }
+                if let strong = self, strong.view.window != nil { return strong }
+                return UIApplication.topMostViewController()
+            }()
+            presenter?.present(viewController, animated: animated, completion: completion)
+        }
+    }
+}
+#endif
+
+#if canImport(UIKit)
+@MainActor
 public final class PDFVC: UIViewController {
     
     var pdfURL: URL?

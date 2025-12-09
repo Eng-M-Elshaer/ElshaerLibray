@@ -235,12 +235,7 @@ public extension UIViewController {
                                 onCancel: onCancel)
         vc.modalPresentationStyle = .overFullScreen
         vc.modalTransitionStyle = .crossDissolve
-        
-        if let presented = presentedViewController {
-            presented.present(vc, animated: true)
-        } else {
-            present(vc, animated: true)
-        }
+        presentSafely(vc, animated: true)
     }
 }
 
